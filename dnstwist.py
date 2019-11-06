@@ -216,7 +216,9 @@ class UrlParser():
 class DomainFuzz():
 
 	def __init__(self, domain):
-		self.domain, self.tld = self.__domain_tld(domain)
+		self.domain = domain 
+		self.tld = domain #self.__domain_tld(domain)
+		print(self.domain)
 		self.domains = []
 		self.qwerty = {
 		'1': '2q', '2': '3wq1', '3': '4ew2', '4': '5re3', '5': '6tr4', '6': '7yt5', '7': '8uy6', '8': '9iu7', '9': '0oi8', '0': 'po9',
@@ -362,7 +364,7 @@ class DomainFuzz():
 								result_2pass.add(domain[:i] + win + domain[i+ws:])
 								win = win_copy
 						j += 1
-
+		#print(list(result_1pass | result_2pass))
 		return list(result_1pass | result_2pass)
 
 	def __hyphenation(self):
@@ -455,41 +457,58 @@ class DomainFuzz():
 
 		return result
 
+	def __domains_with_words(self):
+		result = [self.domain,self.domain.upper(),self.domain.lower(),self.domain.capitalize()]
+		word_list = ["free","wifi","WiFi","net","network","guest","geusts"]
+		connectors = ["-"," ","	","_"]
+		for connector in connectors:
+			for word in word_list:
+				result.append(self.domain+connector+word)
+				result.append(word+connector+self.domain)
+				result.append(self.domain+connector+word.capitalize())
+				result.append(word.capitalize()+connector+self.domain)
+				result.append(self.domain+connector+word.upper())
+				result.append(word.upper()+connector+self.domain)
+		return result
+
 	def generate(self):
-		self.domains.append({ 'fuzzer': 'Original*', 'domain-name': self.domain + '.' + self.tld })
+		domains = self.__domains_with_words()
+		for domain_with_words in domains:
+			self.domain = domain_with_words
+			self.domains.append( self.domain  )
 
-		for domain in self.__addition():
-			self.domains.append({ 'fuzzer': 'Addition', 'domain-name': domain + '.' + self.tld })
-		for domain in self.__bitsquatting():
-			self.domains.append({ 'fuzzer': 'Bitsquatting', 'domain-name': domain + '.' + self.tld })
-		for domain in self.__homoglyph():
-			self.domains.append({ 'fuzzer': 'Homoglyph', 'domain-name': domain + '.' + self.tld })
-		for domain in self.__hyphenation():
-			self.domains.append({ 'fuzzer': 'Hyphenation', 'domain-name': domain + '.' + self.tld })
-		for domain in self.__insertion():
-			self.domains.append({ 'fuzzer': 'Insertion', 'domain-name': domain + '.' + self.tld })
-		for domain in self.__omission():
-			self.domains.append({ 'fuzzer': 'Omission', 'domain-name': domain + '.' + self.tld })
-		for domain in self.__repetition():
-			self.domains.append({ 'fuzzer': 'Repetition', 'domain-name': domain + '.' + self.tld })
-		for domain in self.__replacement():
-			self.domains.append({ 'fuzzer': 'Replacement', 'domain-name': domain + '.' + self.tld })
-		for domain in self.__subdomain():
-			self.domains.append({ 'fuzzer': 'Subdomain', 'domain-name': domain + '.' + self.tld })
-		for domain in self.__transposition():
-			self.domains.append({ 'fuzzer': 'Transposition', 'domain-name': domain + '.' + self.tld })
-		for domain in self.__vowel_swap():
-			self.domains.append({ 'fuzzer': 'Vowel-swap', 'domain-name': domain + '.' + self.tld })
+			for domain in self.__addition():
+				self.domains.append(domain)
+			for domain in self.__bitsquatting():
+				self.domains.append(domain)
+			for domain in self.__homoglyph():
+				self.domains.append(domain)
+			for domain in self.__hyphenation():
+				self.domains.append(domain)
+			for domain in self.__insertion():
+				self.domains.append(domain)
+			for domain in self.__omission():
+				self.domains.append(domain)
+			for domain in self.__repetition():
+				self.domains.append(domain)
+			for domain in self.__replacement():
+				self.domains.append(domain)
+			for domain in self.__subdomain():
+				self.domains.append(domain)
+			for domain in self.__transposition():
+				self.domains.append(domain)
+			for domain in self.__vowel_swap():
+				self.domains.append(domain)
 
-		if '.' in self.tld:
-			self.domains.append({ 'fuzzer': 'Various', 'domain-name': self.domain + '.' + self.tld.split('.')[-1] })
-			self.domains.append({ 'fuzzer': 'Various', 'domain-name': self.domain + self.tld })
-		if '.' not in self.tld:
-			self.domains.append({ 'fuzzer': 'Various', 'domain-name': self.domain + self.tld + '.' + self.tld })
-		if self.tld != 'com' and '.' not in self.tld:
-			self.domains.append({ 'fuzzer': 'Various', 'domain-name': self.domain + '-' + self.tld + '.com' })
+			if '.' in self.tld:
+				self.domains.append(self.domain)
+				self.domains.append(self.domain)
+			if '.' not in self.tld:
+				self.domains.append(self.domain)
+			if self.tld != 'com' and '.' not in self.tld:
+				self.domains.append(self.domain)
 
-		self.__filter_domains()
+		#self.__filter_domains()
 
 
 class DomainDict(DomainFuzz):
@@ -527,7 +546,7 @@ class DomainDict(DomainFuzz):
 
 	def generate(self):
 		for domain in self.__dictionary():
-			self.domains.append({ 'fuzzer': 'Dictionary', 'domain-name': domain + '.' + self.tld })
+			self.domains.append(domain)
 
 
 class TldDict(DomainDict):
@@ -536,7 +555,7 @@ class TldDict(DomainDict):
 		if self.tld in self.dictionary:
 			self.dictionary.remove(self.tld)
 		for tld in self.dictionary:
-				self.domains.append({'fuzzer': 'TLD-swap', 'domain-name': self.domain + '.' + tld})
+				self.domains.append(self.domain)
 
 
 class DomainThread(threading.Thread):
@@ -1032,4 +1051,7 @@ def main():
 
 
 if __name__ == '__main__':
-	main()
+	#main()
+	d = DomainFuzz("cyiot")
+	d.generate()
+	print(d.domains)
